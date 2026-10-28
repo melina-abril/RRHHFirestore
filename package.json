@@ -1,0 +1,20 @@
+{
+  "name": "rrhh-firestore",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Base de datos de RRHH en Firestore: scripts de carga, reglas e índices",
+  "scripts": {
+    "emulator": "firebase emulators:start --only firestore --project demo-rrhh",
+    "seed": "node scripts/seed.js",
+    "deploy:firestore": "firebase deploy --only firestore"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.10.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^14.27.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

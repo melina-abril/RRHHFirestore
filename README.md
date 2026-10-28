@@ -1,52 +1,86 @@
-# Base de Datos · Gestión de Recursos Humanos (RRHH)
+# Base de datos de RRHH · Firestore
 
-## Colecciones del sistema
+Esta base implementa el modelo de datos para el sistema de Gestión de Recursos Humanos en Firestore, cargada y documentada módulo por módulo. 
 
-### Compartidas (core, V1)
-- **departments**: Áreas de la organización
-- **positions**: Puestos laborales
-- **employees**: Legajos de colaboradores
+## Colecciones y módulos
 
-### Módulos
-- **auth** (V2): No requiere colecciones propias (la autenticación solo valida contra las credenciales administradoras; no hay documentos de usuarios colaborador en esta etapa)
-- **inicio** (V3): No requiere colecciones propias (la pantalla principal construye indicadores sobre las colecciones compartidas)
+- **departments** *(mod. core)*: áreas internas de la organización.
+- **positions** *(mod. core)*: puestos disponibles, referenciados por empleados.
+- **employees** *(mod. core)*: legajos de colaboradores, con datos personales y laborales.
+- **auth**: autenticación y manejo de sesiones. *(ver docs/collections/auth.md)*
+- **inicio**: datos de la pantalla principal. *(ver docs/collections/inicio.md)*
+- **employee-onboarding**: incorporaciones de nuevos colaboradores. *(ver docs/collections/employee-onboarding.md)*
+- **employee-edition**: edición y actualización de fichas de colaboradores. *(sin colecciones propias)
 
-## Herramientas y comandos
 
-### Requisitos
-- Node.js >= 20
-- Firebase CLI (`firebase-tools`) y `firebase-admin`
+## Cómo probar la base
 
-### Comandos principales
+1. **Instalar dependencias**
 
-- Instalar dependencias:
+   ```bash
+   npm install
+   ```
 
-      npm install
+2. **Levantar el emulador de Firestore** (en una terminal)
 
-- Levantar el emulador de Firestore (puerto 8085 — panel UI: http://localhost:4005):
+   ```bash
+   npm run emulator
+   ```
+   - Emulador Firestore: http://localhost:8085
+   - Panel de UI: http://localhost:4005
 
-      npm run emulator
+3. **Cargar los datos de ejemplo** (en otra terminal)
 
-- Cargar los datos de ejemplo en Firestore (ejecuta los scripts en firestore/seeds en orden):
+   Contra el emulador:
+   ```bash
+   FIRESTORE_EMULATOR_HOST=localhost:8085 npm run seed
+   ```
+   Contra un proyecto real (requiere credencial adecuada y setear FIREBASE_PROJECT_ID):
+   ```bash
+   GOOGLE_APPLICATION_CREDENTIALS=./service-account.json FIREBASE_PROJECT_ID=mi-proyecto npm run seed
+   ```
 
-      FIRESTORE_EMULATOR_HOST=localhost:8085 npm run seed
+   Los scripts de seeds (firestore/seeds) se aplican en orden de versión (Vn__), una sola vez cada uno; los ya aplicados se registran en la colección `_seedHistory`.
 
-- Desplegar las reglas e índices a un proyecto real (requiere autenticación y variables):
+4. **Desplegar reglas e índices**
 
-      GOOGLE_APPLICATION_CREDENTIALS=./service-account.json FIREBASE_PROJECT_ID=mi-proyecto npm run deploy:firestore
+   ```bash
+   npm run deploy:firestore
+   ```
 
-- Cargar los datos en un proyecto real:
+## Estructura
 
-      GOOGLE_APPLICATION_CREDENTIALS=./service-account.json FIREBASE_PROJECT_ID=mi-proyecto npm run seed
+- **firestore.rules**: reglas cerradas (solo operación vía backend, no permite acceso directo desde web o móviles).
+- **firestore.indexes.json**: índices compuestos definidos por los módulos (de momento vacío: se agregarán en próximas iteraciones).
+- **firestore/seeds**: scripts de carga versionados para cada módulo.
+- **docs/collections/
+{modulo}.md**: documentación del esquema de cada colección.
 
-## Archivos generados
+## Colecciones actuales por módulo
 
-- `firestore/seeds/V1__core.js`: Seed de colecciones compartidas `departments`, `positions`, `employees` y sus documentos de ejemplo.
-- [No genera colecciones nuevas para auth ni inicio por ahora]
-- `docs/collections/core.md`: Esquema de las colecciones compartidas (modelo de referencia para el resto del sistema).
-- `firestore.rules`: Reglas cerradas — solo el backend puede acceder mediante SDK admin; ningún acceso directo de aplicaciones cliente.
-- `firestore.indexes.json`: Índices compuestos requeridos por el modelo (vacío en esta versión, ya que las colecciones actuales no consumen índices adicionales).
+### Módulo core
+- departments
+- positions
+- employees
+
+### Módulo auth
+- (ver docs/collections/auth.md)
+
+### Módulo inicio
+- (ver docs/collections/inicio.md)
+
+### Módulo employee-onboarding
+- (ver docs/collections/employee-onboarding.md)
+
+### Módulo employee-edition
+- (ninguna colección definida: actualiza employees)
+
 
 ---
 
-> Para ampliar la base, cada nuevo módulo define su esquema en `docs/collections/{modulo}.md` y sus documentos de ejemplo en `firestore/seeds/V{n}__{modulo}.js`. El script `scripts/seed.js` los aplica en orden y los registra en la colección `_seedHistory` (no re-aplica los mismos).
+**Stack:** Cloud Firestore (SDK admin, scripts NodeJS, sin acceso directo desde clientes web)
+
+**Comandos principales:**
+- Levantar emulador: `npm run emulator`
+- Cargar datos ejemplo: `npm run seed`
+- Deploy reglas/index: `npm run deploy:firestore`

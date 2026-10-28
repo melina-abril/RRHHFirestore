@@ -1,0 +1,26 @@
+# Módulo: Alta de colaborador
+
+Este módulo no crea colecciones propias: utiliza las colecciones compartidas definidas en core (`employees`, `departments`, `positions`). El alta de colaborador inserta un nuevo documento en `employees`.
+
+## employees (colección definida en core)
+
+Ver `docs/collections/core.md` para el detalle del esquema de empleados.
+
+| Campo           | Tipo    | Obligatorio | Descripción                                  |
+|-----------------|---------|-------------|----------------------------------------------|
+| employeeNumber  | string  | sí          | N° de legajo (igual a id)                    |
+| firstName       | string  | sí          | Nombre                                       |
+| lastName        | string  | sí          | Apellido                                     |
+| documentType    | string  | sí          | Tipo de documento                            |
+| documentNumber  | string  | sí          | Número de documento                          |
+| birthDate       | timestamp | sí        | Fecha de nacimiento                          |
+| email           | string  | sí          | Correo electrónico                           |
+| phone           | string  | sí          | Teléfono                                     |
+| hireDate        | timestamp | sí        | Fecha de ingreso                             |
+| terminationDate | timestamp \| null | no | Fecha de egreso (null si activo)           |
+| departmentId    | string → departments | sí | Área actual                                |
+| positionId      | string → positions | sí | Puesto actual                               |
+| managerId       | string → employees \| null | no | Legajo del responsable (referencia interna) |
+| status          | string  | sí          | `ACTIVE`, `ON_LEAVE` o `TERMINATED`         |
+| deletedAt       | timestamp \| null | no          | Borrado lógico (null si vigente)         |
+| createdAt       | timestamp | sí        | Alta del documento                           |

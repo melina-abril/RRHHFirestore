@@ -1,137 +1,57 @@
 /**
- * Módulo core. Colecciones compartidas: departments, positions y employees.
- * No requiere dependencias de otros seeds.
+ * Core: colecciones compartidas (departments, positions, employees) y los usuarios de ejemplo en Auth + users/{uid}.
+ * Cumple el formato del ejemplo, con datos ficticios y coherentes para TECHFORB (áreas, puestos, 3 empleados en 2 áreas y 2 puestos). Rol: ADMIN solo para la administradora de RRHH.
+ * Contraseña de ejemplo para todos los usuarios: Demo1234!
  */
 const { FieldValue, Timestamp } = require("firebase-admin/firestore");
+const { createDemoUsers } = require("../../scripts/demo-users");
 
 const date = (value) => Timestamp.fromDate(new Date(`${value}T00:00:00Z`));
 
 const departments = [
   { id: "HR", name: "Recursos Humanos" },
-  { id: "ENG", name: "Ingeniería" },
-  { id: "SALES", name: "Ventas" }
+  { id: "IT", name: "Tecnología" }
 ];
 
 const positions = [
-  { id: "HR-LEAD", name: "Jefe de RRHH", departmentId: "HR" },
-  { id: "HR-ASSIST", name: "Asistente de RRHH", departmentId: "HR" },
-  { id: "ENG-LEAD", name: "Líder Técnico", departmentId: "ENG" },
-  { id: "ENG-DEV", name: "Desarrollador/a", departmentId: "ENG" },
-  { id: "SALES-MAN", name: "Gerente de Ventas", departmentId: "SALES" }
+  { id: "HR_MANAGER", name: "Gerente de RR.HH.", departmentId: "HR" },
+  { id: "DEV_JR", name: "Desarrollador/a Jr.", departmentId: "IT" }
 ];
 
-// Empleados de ejemplo: 3 activos y 1 inactivo (egreso)
 const employees = [
-  {
-    id: "E-0001",
-    employeeNumber: "E-0001",
-    firstName: "Ana",
-    lastName: "Pérez",
-    documentType: "DNI",
-    documentNumber: "30123456",
-    birthDate: "1990-04-02",
-    email: "ana.perez@example.com",
-    phone: "+54 11 2211 3344",
-    hireDate: "2021-03-15",
-    terminationDate: null,
-    departmentId: "HR",
-    positionId: "HR-LEAD",
-    managerId: null,
-    status: "ACTIVE",
-    deletedAt: null
-  },
-  {
-    id: "E-0002",
-    employeeNumber: "E-0002",
-    firstName: "Juan",
-    lastName: "García",
-    documentType: "DNI",
-    documentNumber: "29333444",
-    birthDate: "1986-07-18",
-    email: "juan.garcia@example.com",
-    phone: "+54 11 5556 7890",
-    hireDate: "2022-09-01",
-    terminationDate: null,
-    departmentId: "ENG",
-    positionId: "ENG-DEV",
-    managerId: "E-0003",
-    status: "ACTIVE",
-    deletedAt: null
-  },
-  {
-    id: "E-0003",
-    employeeNumber: "E-0003",
-    firstName: "Lucía",
-    lastName: "Méndez",
-    documentType: "DNI",
-    documentNumber: "27777888",
-    birthDate: "1994-12-03",
-    email: "lucia.mendez@example.com",
-    phone: "+54 11 5789 1234",
-    hireDate: "2019-10-10",
-    terminationDate: null,
-    departmentId: "ENG",
-    positionId: "ENG-LEAD",
-    managerId: "E-0001",
-    status: "ON_LEAVE",
-    deletedAt: null
-  },
-  {
-    id: "E-0004",
-    employeeNumber: "E-0004",
-    firstName: "Mario",
-    lastName: "Vega",
-    documentType: "DNI",
-    documentNumber: "31224455",
-    birthDate: "1982-02-20",
-    email: "mario.vega@example.com",
-    phone: "+54 11 4567 8890",
-    hireDate: "2020-05-05",
-    terminationDate: "2023-01-31",
-    departmentId: "SALES",
-    positionId: "SALES-MAN",
-    managerId: null,
-    status: "TERMINATED",
-    deletedAt: null
-  }
+  { id: "E-0001", firstName: "Verónica", lastName: "Silva", documentType: "DNI", documentNumber: "30876124", birthDate: "1983-09-22", email: "veronica.silva@example.com", phone: "+54 11 4999-1234", hireDate: "2020-04-10", departmentId: "HR", positionId: "HR_MANAGER", managerId: null, status: "ACTIVE" },
+  { id: "E-0002", firstName: "Rafael", lastName: "Contreras", documentType: "DNI", documentNumber: "28566798", birthDate: "1995-11-14", email: "rafael.contreras@example.com", phone: "+54 11 4999-2345", hireDate: "2023-01-17", departmentId: "IT", positionId: "DEV_JR", managerId: "E-0001", status: "ACTIVE" },
+  { id: "E-0003", firstName: "Eliana", lastName: "Torres", documentType: "DNI", documentNumber: "32899081", birthDate: "1991-05-30", email: "eliana.torres@example.com", phone: "+54 11 4999-3456", hireDate: "2022-11-01", departmentId: "IT", positionId: "DEV_JR", managerId: "E-0001", status: "ON_LEAVE" }
 ];
 
-exports.seed = async (db) => {
+exports.seed = async (db, { auth }) => {
   const batch = db.batch();
-  // Departments
   for (const { id, ...data } of departments) {
-    batch.set(db.collection("departments").doc(id), {
-      ...data,
-      createdAt: FieldValue.serverTimestamp()
-    });
+    batch.set(db.collection("departments").doc(id), { ...data, createdAt: FieldValue.serverTimestamp() });
   }
-  // Positions
   for (const { id, ...data } of positions) {
-    batch.set(db.collection("positions").doc(id), {
-      ...data,
-      createdAt: FieldValue.serverTimestamp()
-    });
+    batch.set(db.collection("positions").doc(id), { ...data, createdAt: FieldValue.serverTimestamp() });
   }
-  // Employees
-  for (const { id, employeeNumber, firstName, lastName, documentType, documentNumber, birthDate, email, phone, hireDate, terminationDate, departmentId, positionId, managerId, status, deletedAt } of employees) {
+  for (const { id, birthDate, hireDate, ...data } of employees) {
     batch.set(db.collection("employees").doc(id), {
-      employeeNumber,
-      firstName,
-      lastName,
-      documentType,
-      documentNumber,
+      ...data,
+      employeeNumber: id,
       birthDate: date(birthDate),
-      email,
-      phone,
       hireDate: date(hireDate),
-      terminationDate: terminationDate ? date(terminationDate) : null,
-      departmentId,
-      positionId,
-      managerId,
-      status,
-      deletedAt,
-      createdAt: FieldValue.serverTimestamp()
+      terminationDate: null,
+      deletedAt: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
   }
   await batch.commit();
+  await createDemoUsers(db, auth, [
+    {
+      uid: "admin-rrhh",
+      email: "veronica.silva@example.com",
+      name: "Verónica Silva",
+      role: "ADMIN",
+      employeeId: "E-0001"
+    }
+  ]);
 };

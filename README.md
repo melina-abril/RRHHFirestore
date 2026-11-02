@@ -1,86 +1,82 @@
-# Base de datos de RRHH · Firestore
+# Sistema de Gestión de Recursos Humanos · Base de datos (Cloud Firestore)
 
-Esta base implementa el modelo de datos para el sistema de Gestión de Recursos Humanos en Firestore, cargada y documentada módulo por módulo. 
+Este proyecto implementa la base de datos y los usuarios del sistema de gestión de RR.HH. de TECHFORB sobre **Cloud Firestore** y **Firebase Auth**. Incluye colecciones y datos de ejemplo para levantar el sistema en local (con los emuladores) y preparar el despliegue a un proyecto real de Firebase.
 
-## Colecciones y módulos
+## Arranque rápido (entorno local)
 
-- **departments** *(mod. core)*: áreas internas de la organización.
-- **positions** *(mod. core)*: puestos disponibles, referenciados por empleados.
-- **employees** *(mod. core)*: legajos de colaboradores, con datos personales y laborales.
-- **auth**: autenticación y manejo de sesiones. *(ver docs/collections/auth.md)*
-- **inicio**: datos de la pantalla principal. *(ver docs/collections/inicio.md)*
-- **employee-onboarding**: incorporaciones de nuevos colaboradores. *(ver docs/collections/employee-onboarding.md)*
-- **employee-edition**: edición y actualización de fichas de colaboradores. *(sin colecciones propias)
-
-
-## Cómo probar la base
-
-1. **Instalar dependencias**
+1. Instala dependencias:
 
    ```bash
    npm install
+   npm run functions:install
    ```
 
-2. **Levantar el emulador de Firestore** (en una terminal)
+2. Levanta los emuladores en una terminal:
 
    ```bash
-   npm run emulator
-   ```
-   - Emulador Firestore: http://localhost:8085
-   - Panel de UI: http://localhost:4005
-
-3. **Cargar los datos de ejemplo** (en otra terminal)
-
-   Contra el emulador:
-   ```bash
-   FIRESTORE_EMULATOR_HOST=localhost:8085 npm run seed
-   ```
-   Contra un proyecto real (requiere credencial adecuada y setear FIREBASE_PROJECT_ID):
-   ```bash
-   GOOGLE_APPLICATION_CREDENTIALS=./service-account.json FIREBASE_PROJECT_ID=mi-proyecto npm run seed
+   npm start
+   # Panel de emuladores: http://localhost:4005
+   # Firestore (8085), Auth (9099), Functions (5002)
    ```
 
-   Los scripts de seeds (firestore/seeds) se aplican en orden de versión (Vn__), una sola vez cada uno; los ya aplicados se registran en la colección `_seedHistory`.
-
-4. **Desplegar reglas e índices**
+3. En otra terminal, carga los datos y usuarios de ejemplo:
 
    ```bash
-   npm run deploy:firestore
+   npm run seed:emulator
    ```
 
-## Estructura
+   > Cada script de `firestore/seeds/` solo se aplica una vez (queda registrado en `_seedHistory`).
 
-- **firestore.rules**: reglas cerradas (solo operación vía backend, no permite acceso directo desde web o móviles).
-- **firestore.indexes.json**: índices compuestos definidos por los módulos (de momento vacío: se agregarán en próximas iteraciones).
-- **firestore/seeds**: scripts de carga versionados para cada módulo.
-- **docs/collections/
-{modulo}.md**: documentación del esquema de cada colección.
+4. El backend/API levanta desde `functions/` (ver documentación de la capa backend).
 
-## Colecciones actuales por módulo
+## Usuarios de ejemplo
 
-### Módulo core
-- departments
-- positions
-- employees
+- **admin-rrhh**:  veronica.silva@example.com   (rol: ADMIN)
 
-### Módulo auth
-- (ver docs/collections/auth.md)
+Contraseña para todos los usuarios de ejemplo: `Demo1234!`
 
-### Módulo inicio
-- (ver docs/collections/inicio.md)
+> Cada usuario está creado en Firebase Auth y como documento en `users/{uid}`.
 
-### Módulo employee-onboarding
-- (ver docs/collections/employee-onboarding.md)
+## Colecciones y módulos
 
-### Módulo employee-edition
-- (ninguna colección definida: actualiza employees)
+Las siguientes colecciones ya existen con datos de ejemplo:
 
+- **users**: usuarios del sistema (uno por cada cuenta administrativa)
+- **departments**: áreas/departamentos (ej. RRHH, Tecnología)
+- **positions**: puestos en la empresa (ej. Gerente RR.HH., Desarrollador/a Jr.)
+- **employees**: legajos y fichas personales de colaboradores
 
----
+Consulta la documentación de cada colección en `docs/collections/*.md`.
 
-**Stack:** Cloud Firestore (SDK admin, scripts NodeJS, sin acceso directo desde clientes web)
+## Documentación del modelo
 
-**Comandos principales:**
-- Levantar emulador: `npm run emulator`
-- Cargar datos ejemplo: `npm run seed`
-- Deploy reglas/index: `npm run deploy:firestore`
+- [docs/collections/core.md](docs/collections/core.md): users, departments, positions, employees (campos y relaciones)
+
+## Reglas & índices
+
+- Firestore está 100% cerrado por reglas (`firestore.rules`): todo acceso pasa por el backend (`functions/`), nunca por el frontend.
+- Los índices compuestos están en `firestore.indexes.json` (solo para consultas que combinan filtros y orden por campos distintos).
+
+## Scripts y seeds
+
+- Cada script en `firestore/seeds/V{n}__{modulo}.js` crea las colecciones y documentos necesarios como migración (solo una vez, como Flyway).
+- El script core crea también los usuarios administrativos con la contraseña de ejemplo (`Demo1234!`).  **Nunca modifiques la colección `users` a mano; usa siempre el script correspondiente.**
+
+## Despliegue a un proyecto real (Firebase)
+
+1. Prepara un archivo de credenciales de servicio (service-account.json) y asigna el proyecto de Firebase deseado:
+
+   ```bash
+   firebase use --add
+   export GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+   export FIREBASE_PROJECT_ID=mi-proyecto
+   npm run seed
+   npm run deploy
+   ```
+
+- `npm run seed` carga los datos iniciales al proyecto real
+- `npm run deploy` sube funciones, reglas e índices
+
+## Dónde está la API
+
+La API y la lógica de negocio van en `functions/` (ver capa backend). Este módulo solo incluye la base (colecciones, seeds y documentación).

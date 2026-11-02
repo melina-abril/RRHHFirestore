@@ -1,20 +1,24 @@
 {
-  "name": "rrhh-firestore",
+  "name": "firebase-project",
   "version": "1.0.0",
   "private": true,
-  "description": "Base de datos de RRHH en Firestore: scripts de carga, reglas e índices",
+  "description": "Proyecto Firebase del sistema: Firestore (reglas, índices y scripts de carga), Auth y la API en functions/",
   "scripts": {
-    "emulator": "firebase emulators:start --only firestore --project demo-rrhh",
+    "functions:install": "npm --prefix functions install",
+    "functions:build": "npm --prefix functions run build",
+    "start": "npm run functions:build && firebase emulators:start",
+    "emulators:db": "firebase emulators:start --only firestore,auth",
     "seed": "node scripts/seed.js",
-    "deploy:firestore": "firebase deploy --only firestore"
+    "seed:emulator": "node scripts/seed.js --emulator",
+    "deploy": "npm run functions:build && firebase deploy"
   },
   "dependencies": {
-    "firebase-admin": "^13.10.0"
+    "firebase-admin": "^14.5.0"
   },
   "devDependencies": {
-    "firebase-tools": "^14.27.0"
+    "firebase-tools": "^15.34.2"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
